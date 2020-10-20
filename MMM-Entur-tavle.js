@@ -4,7 +4,8 @@ Module.register("MMM-Entur-tavle", {
         ETClientName: "MMM-Entur-tavle",
         stopId: "12345",
         stopType: "StopPlace", // StopPlace or Quay - case sensitive.
-        numResults: 5,
+        numResults: 20,
+        limit:10,
         authorityId: "NSR",
         highlightRealtime: false,
         showHeader: true,
@@ -64,6 +65,20 @@ Module.register("MMM-Entur-tavle", {
         return cell;
     },
 
+    matchExclude: function(journey) {
+        const exclusions = this.config.exclusions;
+        const publicCode = journey.serviceJourney.journeyPattern.line.publicCode;
+        const frontText = journey.destinationDisplay.frontText;
+        const oneLine = publicCode + " " + frontText;
+
+        for(var i = 0; i < exclusions.length; i++) {
+            if(oneLine.match(exclusions[i]) != null) {
+                return true;
+            }
+        }
+        return false;
+    },
+
     getDom: function(){
         let wrapper = document.createElement("div");
         wrapper.className = `align-left light bright ${this.config.size}`;
@@ -75,10 +90,11 @@ Module.register("MMM-Entur-tavle", {
                 hrow.innerHTML = this.quayName;
                 wrapper.appendChild(hrow);
             }
+            let count = 0;
             for (const journey of this.journeys){
                 let exclusions = this.config.exclusions.map( (excl) => { return excl.toLowerCase(); } );
                 let publicCode = journey.serviceJourney.journeyPattern.line.publicCode;
-                if (exclusions.includes(publicCode.toLowerCase())){
+                if(this.matchExclude(journey)) {
                     continue;
                 }
                 let row = document.createElement("tr");
@@ -98,6 +114,10 @@ Module.register("MMM-Entur-tavle", {
                 row.appendChild(this.getCell("&nbsp;"));
                 row.appendChild(this.getCell(this.getDepartureTime(moment().local().toISOString(), journey.expectedDepartureTime), "align-right"));
                 table.appendChild(row);
+                count += 1;
+                if(count > this.config.limit) {
+                    break;
+                }
             }
             wrapper.appendChild(table);
         } else {
