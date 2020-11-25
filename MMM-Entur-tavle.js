@@ -15,6 +15,7 @@ Module.register("MMM-Entur-tavle", {
         showTransportMode: false,
         timeOffset: [ 0, "seconds"],
         exclusions: [],
+        excludeRegex: null
     },
 
     getStyles: function () {
@@ -65,17 +66,21 @@ Module.register("MMM-Entur-tavle", {
         return cell;
     },
 
-    matchExclude: function(journey) {
+    matchExcludes: function(journey) {
         const exclusions = this.config.exclusions;
         const publicCode = journey.serviceJourney.journeyPattern.line.publicCode;
-        const frontText = journey.destinationDisplay.frontText;
-        const oneLine = publicCode + " " + frontText;
-
         for(var i = 0; i < exclusions.length; i++) {
-            if(oneLine.match(exclusions[i]) != null) {
+            if(publicCode == exclusions[i]) {
                 return true;
             }
         }
+        const frontText = journey.destinationDisplay.frontText;
+        const oneLine = publicCode + " " + frontText;
+
+        if(oneLine.match(this.excludeRegex) != null) {
+            return true;
+        }
+
         return false;
     },
 
@@ -94,7 +99,7 @@ Module.register("MMM-Entur-tavle", {
             for (const journey of this.journeys){
                 let exclusions = this.config.exclusions.map( (excl) => { return excl.toLowerCase(); } );
                 let publicCode = journey.serviceJourney.journeyPattern.line.publicCode;
-                if(this.matchExclude(journey)) {
+                if(this.matchExcludes(journey)) {
                     continue;
                 }
                 let row = document.createElement("tr");
