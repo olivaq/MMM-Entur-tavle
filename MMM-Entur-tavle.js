@@ -69,10 +69,8 @@ Module.register("MMM-Entur-tavle", {
     matchExcludes: function(journey) {
         const exclusions = this.config.exclusions;
         const publicCode = journey.serviceJourney.journeyPattern.line.publicCode;
-        for(var i = 0; i < exclusions.length; i++) {
-            if(publicCode == exclusions[i]) {
-                return true;
-            }
+        if (exclusions.includes(publicCode.toLowerCase())){
+         return true;   
         }
         const frontText = journey.destinationDisplay.frontText;
         const oneLine = publicCode + " " + frontText;
